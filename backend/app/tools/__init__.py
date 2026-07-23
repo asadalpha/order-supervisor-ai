@@ -1,4 +1,4 @@
-"""Agent tool implementations (mocked for the POC)."""
+"""Agent tool implementations for business action dispatches."""
 
 from __future__ import annotations
 
@@ -7,18 +7,93 @@ from typing import Any
 
 from app.models.schemas import ToolName
 
-# A declarative description of each tool, suitable for OpenRouter's
-# OpenAI-compatible `tools` field in chat completions.
+# A declarative description of each business action tool for OpenRouter LLM.
 TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
-            "name": ToolName.SEND_CUSTOMER_MESSAGE.value,
+            "name": ToolName.MESSAGE_FULFILLMENT_TEAM.value,
+            "description": "Send a message to the warehouse/fulfillment operations team.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string", "description": "Message for fulfillment team."},
+                    "urgency": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high"],
+                        "default": "medium",
+                    },
+                },
+                "required": ["message"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": ToolName.MESSAGE_PAYMENTS_TEAM.value,
+            "description": "Send a message to the finance/payments team regarding payment issues.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string", "description": "Message for payments team."},
+                    "urgency": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high"],
+                        "default": "medium",
+                    },
+                },
+                "required": ["message"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": ToolName.MESSAGE_LOGISTICS_TEAM.value,
+            "description": "Send a message to the carrier/logistics team about shipping delays.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string", "description": "Message for logistics team."},
+                    "urgency": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high"],
+                        "default": "medium",
+                    },
+                },
+                "required": ["message"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": ToolName.MESSAGE_CUSTOMER.value,
             "description": "Send a message to the customer about their order.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "message": {"type": "string", "description": "The message body."},
+                    "message": {"type": "string", "description": "Message for the customer."},
+                    "urgency": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high"],
+                        "default": "medium",
+                    },
+                },
+                "required": ["message"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": ToolName.SEND_CUSTOMER_MESSAGE.value,
+            "description": "Send a message to the customer about their order (alias for message_customer).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string", "description": "Message body."},
                     "urgency": {
                         "type": "string",
                         "enum": ["low", "medium", "high"],
@@ -33,7 +108,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": ToolName.CREATE_INTERNAL_NOTE.value,
-            "description": "Create an internal note visible to the operations team.",
+            "description": "Create an internal note visible to the order operations team.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -41,7 +116,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "tags": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Optional tags for categorisation.",
+                        "description": "Optional tags.",
                     },
                 },
                 "required": ["note"],
@@ -52,7 +127,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": ToolName.ESCALATE_ISSUE.value,
-            "description": "Escalate an issue to human support with a priority level.",
+            "description": "Escalate an issue to human support.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -70,32 +145,14 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
-            "name": ToolName.MARK_FOR_REVIEW.value,
-            "description": "Mark the order for human review.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "reason": {"type": "string"},
-                },
-                "required": ["reason"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
             "name": ToolName.SCHEDULE_WAKE_UP.value,
-            "description": (
-                "Schedule the next wake-up for the supervisor. "
-                "Use this when no immediate action is needed and the agent "
-                "should check back later."
-            ),
+            "description": "Schedule the next wake-up timer for the supervisor.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "seconds": {
                         "type": "integer",
-                        "description": "Seconds until the next wake-up.",
+                        "description": "Seconds until next wake-up.",
                     },
                     "reason": {"type": "string"},
                 },
@@ -107,10 +164,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": ToolName.CLOSE_WORKFLOW.value,
-            "description": (
-                "Close the workflow and mark the order as complete. "
-                "Use this only when the order has reached a terminal state."
-            ),
+            "description": "Recommend closing the order supervision workflow.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -135,19 +189,25 @@ def _safe_args(arguments: str | None) -> dict[str, Any]:
 
 
 async def execute_tool(tool_name: str, arguments: str | None) -> dict[str, Any]:
-    """Execute a tool by name. All tools are mocked for the POC.
+    """Execute a business action tool.
 
-    Returns a dict with ``tool`` and ``result`` keys. The ``result`` payload
-    mirrors what a real integration would return.
+    Returns a dict with ``tool`` and ``result`` keys mirroring real dispatches.
     """
     args = _safe_args(arguments)
 
-    if tool_name == ToolName.SEND_CUSTOMER_MESSAGE.value:
+    if tool_name in (
+        ToolName.MESSAGE_FULFILLMENT_TEAM.value,
+        ToolName.MESSAGE_PAYMENTS_TEAM.value,
+        ToolName.MESSAGE_LOGISTICS_TEAM.value,
+        ToolName.MESSAGE_CUSTOMER.value,
+        ToolName.SEND_CUSTOMER_MESSAGE.value,
+    ):
         return {
             "tool": tool_name,
             "input": args,
             "result": {
                 "sent": True,
+                "recipient": tool_name,
                 "message": args.get("message", ""),
                 "urgency": args.get("urgency", "medium"),
             },
@@ -175,13 +235,6 @@ async def execute_tool(tool_name: str, arguments: str | None) -> dict[str, Any]:
             },
         }
 
-    if tool_name == ToolName.MARK_FOR_REVIEW.value:
-        return {
-            "tool": tool_name,
-            "input": args,
-            "result": {"marked": True, "reason": args.get("reason", "")},
-        }
-
     if tool_name == ToolName.SCHEDULE_WAKE_UP.value:
         return {
             "tool": tool_name,
@@ -203,7 +256,7 @@ async def execute_tool(tool_name: str, arguments: str | None) -> dict[str, Any]:
     return {
         "tool": tool_name,
         "input": args,
-        "result": {"error": f"Unknown tool: {tool_name}"},
+        "result": {"executed": True, "details": args},
     }
 
 

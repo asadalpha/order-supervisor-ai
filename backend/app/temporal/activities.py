@@ -165,12 +165,20 @@ async def agent_execute(input_data: AgentActivityInput) -> AgentActivityResult:
 @activity.defn
 async def persist_timeline_event(data: PersistEventInput) -> None:
     """Persist an event to the timeline without waking the main agent."""
+    raw_event = data.event or {}
+    event_payload = (
+        raw_event["event_data"]
+        if isinstance(raw_event.get("event_data"), dict)
+        else raw_event
+    )
+    event_type = raw_event.get("event_type") or data.event.get("event_type", "unknown")
+
     await supabase_client.insert(
         "timeline_events",
         {
             "run_id": data.run_id,
-            "event_type": data.event.get("event_type", "unknown"),
-            "event_data": data.event,
+            "event_type": event_type,
+            "event_data": event_payload,
             "action_taken": data.action_taken,
         },
     )

@@ -64,9 +64,9 @@ export function SupervisorForm() {
       </div>
 
       <div className="space-y-2">
-        <Label>Available Tools</Label>
+        <Label>Available Actions</Label>
         <div className="grid grid-cols-2 gap-2">
-          {AVAILABLE_TOOLS.map((tool) => (
+          {AVAILABLE_TOOLS.map((tool: string) => (
             <button
               key={tool}
               type="button"

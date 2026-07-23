@@ -10,8 +10,9 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from structlog import get_logger
 
 from app.api import events, runs, supervisors
@@ -41,11 +42,20 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
-        allow_credentials=True,
+        allow_origins=["*"],
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.error("unhandled_exception", path=request.url.path, error=str(exc), exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal Server Error", "error": str(exc)},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
 
     # Routers
     app.include_router(supervisors.router, prefix="/api/supervisors", tags=["supervisors"])

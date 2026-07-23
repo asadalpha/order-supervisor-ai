@@ -134,6 +134,12 @@ class OrderSupervisorWorkflow:
             await self._await_next_trigger()
             if self._terminate_requested:
                 break
+
+            # Check explicit lifecycle completion rules (terminal order event)
+            latest_event = self._timeline[-1] if self._timeline else {}
+            if latest_event.get("event_type") in ("delivered", "refund_requested"):
+                break
+
             trigger = "signal" if self._wake_signal_received else "scheduled"
             self._wake_signal_received = False
             result = await self._run_agent(trigger=trigger)

@@ -76,8 +76,18 @@ async def create_run(payload: RunCreate) -> RunResponse:
 @router.get("", response_model=list[RunResponse])
 async def list_runs(status_filter: str | None = None) -> list[RunResponse]:
     """List runs, optionally filtered by status."""
-    rows = await supabase_client.list_runs(status=status_filter)
-    return [RunResponse.model_validate(row) for row in rows]
+    try:
+        rows = await supabase_client.list_runs(status=status_filter)
+        results: list[RunResponse] = []
+        for row in rows:
+            try:
+                results.append(RunResponse.model_validate(row))
+            except Exception as val_exc:
+                logger.warning("run_row_validation_failed", run_id=row.get("id"), error=str(val_exc))
+        return results
+    except Exception as exc:
+        logger.error("list_runs_failed", error=str(exc))
+        return []
 
 
 @router.get("/{run_id}", response_model=RunResponse)

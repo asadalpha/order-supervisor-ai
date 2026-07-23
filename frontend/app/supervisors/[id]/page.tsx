@@ -3,22 +3,10 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Bot,
-  Wrench,
-  Play,
-  Clock,
-  Sparkles,
-  Layers,
-  FileText,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
-import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input, Label } from "@/components/ui/input";
-import { LoadingRow } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/badge";
 import { useSupervisor } from "@/hooks/use-supervisors";
 import { useCreateRun, useRuns } from "@/hooks/use-runs";
 import { formatRelative, prettyJson } from "@/lib/utils";
@@ -38,7 +26,9 @@ export default function SupervisorDetailPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <LoadingRow label="Loading supervisor template…" />
+        <div className="p-8 text-center text-xs text-[#888892]">
+          Loading supervisor template…
+        </div>
       </AppShell>
     );
   }
@@ -46,22 +36,22 @@ export default function SupervisorDetailPage() {
   if (!supervisor) {
     return (
       <AppShell>
-        <PageHeader title="Supervisor Not Found" />
-        <div className="px-8">
-          <Link href="/supervisors">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Supervisors
-            </Button>
+        <div className="p-8 max-w-5xl mx-auto space-y-4 text-xs">
+          <Link
+            href="/supervisors"
+            className="inline-flex items-center gap-1 text-[#888892] hover:text-text"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Supervisors
           </Link>
+          <p className="text-text font-semibold">Supervisor Not Found.</p>
         </div>
       </AppShell>
     );
   }
 
-  const supervisorRuns = allRuns?.filter(
-    (r) => r.supervisor_id === supervisor.id
-  ) || [];
+  const supervisorRuns =
+    allRuns?.filter((r) => r.supervisor_id === supervisor.id) || [];
 
   const handleStartRun = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,180 +63,192 @@ export default function SupervisorDetailPage() {
       });
       router.push(`/runs/${newRun.id}`);
     } catch {
-      // Error handled by mutation
+      // Handled in mutation
     }
   };
 
   return (
     <AppShell>
-      <PageHeader
-        title={supervisor.name}
-        description={
-          <span className="flex items-center gap-3">
-            <span>Created {formatRelative(supervisor.created_at)}</span>
-            <span>•</span>
-            <span>Updated {formatRelative(supervisor.updated_at)}</span>
-          </span>
-        }
-        action={
-          <div className="flex items-center gap-2">
-            <Link href="/supervisors">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Supervisors
-              </Button>
-            </Link>
-            <Button size="sm" onClick={() => setShowStartRun(!showStartRun)}>
-              <Play className="h-3.5 w-3.5" />
-              Start Order Run
-            </Button>
-          </div>
-        }
-      />
+      <div className="p-8 max-w-7xl w-full mx-auto space-y-6">
+        <div>
+          <Link
+            href="/supervisors"
+            className="inline-flex items-center gap-1 text-xs text-[#888892] hover:text-text font-medium transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Supervisors
+          </Link>
+        </div>
 
-      <div className="space-y-6 px-8 pb-10">
-        {/* Quick Start Run Drawer / Box */}
+        {/* Page Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-text tracking-tight">
+              {supervisor.name}
+            </h1>
+            <p className="text-xs text-[#888892] mt-1">
+              Created {formatRelative(supervisor.created_at)} • Updated{" "}
+              {formatRelative(supervisor.updated_at)}
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => setShowStartRun(!showStartRun)}
+            className="bg-[#1f1f26] border border-[#2a2a34] text-text hover:bg-[#282834]"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Start Order Run
+          </Button>
+        </div>
+
+        {/* Start Run Drawer */}
         {showStartRun && (
-          <Card className="border-accent/40 bg-accent/5 p-4">
-            <form onSubmit={handleStartRun} className="flex items-end gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="orderId">Order ID</Label>
-                <Input
-                  id="orderId"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  placeholder="e.g. ORD-98765"
-                  autoFocus
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={!orderId.trim() || createRun.isPending}
-              >
-                <Play className="h-3.5 w-3.5" />
-                {createRun.isPending ? "Starting Run…" : "Launch Workflow"}
-              </Button>
+          <form
+            onSubmit={handleStartRun}
+            className="rounded-lg border border-[#1c1c24] bg-[#141418] p-5 text-xs space-y-4"
+          >
+            <h3 className="font-bold text-text">Launch New Order Run</h3>
+            <div>
+              <label className="block text-[#888892] font-semibold mb-1">
+                Order ID
+              </label>
+              <input
+                type="text"
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+                placeholder="e.g. ORD-9988"
+                className="w-full rounded-lg border border-[#1c1c24] bg-[#0a0a0c] px-3 py-2 text-xs text-text focus:border-[#2a2a34] focus:outline-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
+                size="sm"
                 onClick={() => setShowStartRun(false)}
               >
                 Cancel
               </Button>
-            </form>
-            {createRun.isError && (
-              <p className="mt-2 text-xs text-danger">
-                {createRun.error instanceof Error
-                  ? createRun.error.message
-                  : "Failed to start workflow run"}
-              </p>
-            )}
-          </Card>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createRun.isPending || !orderId.trim()}
+                className="bg-[#1f1f26] text-text border border-[#2a2a34]"
+              >
+                {createRun.isPending ? "Starting…" : "Launch Workflow"}
+              </Button>
+            </div>
+          </form>
         )}
 
-        {/* Base Instruction Card */}
-        <Card className="space-y-3 p-5">
-          <div className="flex items-center gap-2 border-b border-border pb-3">
-            <FileText className="h-4 w-4 text-accent" />
-            <h3 className="text-sm font-semibold text-text">Base Instructions</h3>
-          </div>
-          <p className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-text-muted">
-            {supervisor.base_instruction}
-          </p>
-        </Card>
-
-        {/* Configurations Grid */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Available Tools */}
-          <Card className="space-y-3 p-5">
-            <div className="flex items-center gap-2 border-b border-border pb-3">
-              <Wrench className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold text-text">Available Tools</h3>
+        {/* Configuration Details Grid */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 text-xs">
+          <div className="lg:col-span-2 rounded-lg border border-[#1c1c24] bg-[#141418] p-5 space-y-4">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#888892] block mb-1">
+                System Directive & Base Instruction
+              </span>
+              <p className="text-text leading-relaxed font-medium">
+                {supervisor.base_instruction}
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {supervisor.available_tools.map((tool) => (
-                <span
-                  key={tool}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/10 px-2.5 py-1 font-mono text-[11px] font-medium text-text"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                  {tool}
+
+            {supervisor.wake_up_guidance && (
+              <div className="pt-3 border-t border-[#1c1c24]">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#888892] block mb-1">
+                  Classifier & Wake-up Guidance
                 </span>
-              ))}
-            </div>
-          </Card>
-
-          {/* Wake-up Guidance & Model Config */}
-          <Card className="space-y-3 p-5">
-            <div className="flex items-center gap-2 border-b border-border pb-3">
-              <Sparkles className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold text-text">Agent & Wake-Up Config</h3>
-            </div>
-            <div className="space-y-3 text-xs">
-              <div>
-                <span className="font-medium text-text-dim">Wake-Up Guidance:</span>
-                <p className="mt-0.5 text-text-muted">
-                  {supervisor.wake_up_guidance || "No explicit guidance set (uses standard priority rules)."}
+                <p className="text-text leading-relaxed font-medium">
+                  {supervisor.wake_up_guidance}
                 </p>
               </div>
-              {supervisor.model_config && (
-                <div>
-                  <span className="font-medium text-text-dim">Model Configuration:</span>
-                  <pre className="mt-1 overflow-x-auto rounded bg-surface-2 p-2 font-mono text-[11px] text-text-muted">
-                    {prettyJson(supervisor.model_config)}
-                  </pre>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-
-        {/* Associated Workflow Runs */}
-        <Card className="space-y-3 p-5">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold text-text">
-                Workflow Runs ({supervisorRuns.length})
-              </h3>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowStartRun(true)}
-            >
-              + New Run
-            </Button>
+            )}
           </div>
 
-          {!supervisorRuns.length ? (
-            <p className="py-4 text-center text-xs text-text-dim">
-              No workflow runs started with this supervisor yet. Click "+ New Run" above to start one.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {supervisorRuns.map((run) => (
-                <Link
-                  key={run.id}
-                  href={`/runs/${run.id}`}
-                  className="flex items-center justify-between rounded-md border border-border bg-surface p-3 transition-colors hover:border-border-hover"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-semibold text-text">
-                      Order {run.order_id}
-                    </span>
-                    <span className="rounded bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-text-muted uppercase">
-                      {run.status}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-text-dim">
-                    {formatRelative(run.created_at)}
+          <div className="rounded-lg border border-[#1c1c24] bg-[#141418] p-5 space-y-4">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#888892] block mb-2">
+                Enabled Tool Dispatches ({supervisor.available_tools.length})
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {supervisor.available_tools.map((tool) => (
+                  <span
+                    key={tool}
+                    className="rounded-md border border-[#1c1c24] bg-[#0a0a0c] px-2.5 py-1 font-mono text-[11px] text-[#888892]"
+                  >
+                    {tool}
                   </span>
-                </Link>
-              ))}
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Associated Runs Table */}
+        <div className="space-y-3 pt-2">
+          <h2 className="text-sm font-bold text-text">
+            Runs Powered by {supervisor.name} ({supervisorRuns.length})
+          </h2>
+
+          {supervisorRuns.length === 0 ? (
+            <div className="py-8 text-center text-xs text-[#888892] border border-[#1c1c24] rounded-lg bg-[#141418]">
+              No runs have been launched with this supervisor template yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-[#1c1c24] bg-[#141418]">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#1c1c24] text-[#656570] font-medium text-[11px]">
+                    <th className="py-3 px-4">Order ID</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Events / Actions</th>
+                    <th className="py-3 px-4">Created Date</th>
+                    <th className="py-3 pr-4 text-right">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1c1c24]">
+                  {supervisorRuns.map((run) => {
+                    const st = (run.current_state as {
+                      event_count?: number;
+                      action_count?: number;
+                    }) || {};
+
+                    return (
+                      <tr
+                        key={run.id}
+                        className="transition-colors hover:bg-[#181820]"
+                      >
+                        <td className="py-3.5 px-4 font-semibold text-text">
+                          Order {run.order_id}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <StatusBadge status={run.status} />
+                        </td>
+                        <td className="py-3.5 px-4 text-[#888892]">
+                          {st.event_count ?? 0} Events • {st.action_count ?? 0}{" "}
+                          Actions
+                        </td>
+                        <td className="py-3.5 px-4 text-[#656570]">
+                          {formatRelative(run.created_at)}
+                        </td>
+                        <td className="py-3.5 pr-4 text-right">
+                          <Link
+                            href={`/runs/${run.id}`}
+                            className="inline-flex items-center gap-1 text-xs text-[#888892] hover:text-text font-medium"
+                          >
+                            View
+                            <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
-        </Card>
+        </div>
       </div>
     </AppShell>
   );

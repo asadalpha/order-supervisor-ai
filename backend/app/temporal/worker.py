@@ -30,7 +30,25 @@ logger = get_logger(__name__)
 async def main() -> None:
     """Start the Temporal worker and run until interrupted."""
     settings = get_settings()
-    client = await Client.connect(settings.temporal_host)
+
+    client: Client | None = None
+    for attempt in range(1, 15):
+        try:
+            client = await Client.connect(settings.temporal_host)
+            logger.info("temporal_worker_connected", host=settings.temporal_host)
+            break
+        except Exception as exc:
+            if attempt == 14:
+                raise exc
+            logger.warning(
+                "temporal_worker_connect_retry",
+                attempt=attempt,
+                host=settings.temporal_host,
+                error=str(exc),
+            )
+            await asyncio.sleep(2)
+
+    assert client is not None
 
     worker = Worker(
         client,

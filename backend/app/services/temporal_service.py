@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from structlog import get_logger
@@ -21,12 +22,21 @@ class TemporalService:
     async def _ensure_client(self) -> Client:
         if self._client is None:
             settings = get_settings()
-            self._client = await Client.connect(settings.temporal_host)
-            logger.info(
-                "temporal_client_connected",
-                host=settings.temporal_host,
-                namespace=settings.temporal_namespace,
-            )
+            for attempt in range(1, 15):
+                try:
+                    self._client = await Client.connect(settings.temporal_host)
+                    logger.info(
+                        "temporal_client_connected",
+                        host=settings.temporal_host,
+                        namespace=settings.temporal_namespace,
+                    )
+                    break
+                except Exception as exc:
+                    if attempt == 14:
+                        raise exc
+                    logger.warning("temporal_service_connect_retry", attempt=attempt, error=str(exc))
+                    await asyncio.sleep(2)
+        assert self._client is not None
         return self._client
 
     async def start_order_workflow(

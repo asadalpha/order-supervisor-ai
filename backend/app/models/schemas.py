@@ -41,6 +41,10 @@ class EventType(StrEnum):
 class ToolName(StrEnum):
     """Names of tools the agent can invoke."""
 
+    MESSAGE_FULFILLMENT_TEAM = "message_fulfillment_team"
+    MESSAGE_PAYMENTS_TEAM = "message_payments_team"
+    MESSAGE_LOGISTICS_TEAM = "message_logistics_team"
+    MESSAGE_CUSTOMER = "message_customer"
     SEND_CUSTOMER_MESSAGE = "send_customer_message"
     CREATE_INTERNAL_NOTE = "create_internal_note"
     ESCALATE_ISSUE = "escalate_issue"

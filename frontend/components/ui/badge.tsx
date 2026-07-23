@@ -2,57 +2,64 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import type { RunStatus } from "@/lib/types";
 
-type Tone = "default" | "success" | "warning" | "danger" | "info";
-
-const TONES: Record<Tone, string> = {
-  default: "bg-surface-2 text-text-muted border-border",
-  success: "bg-success/10 text-success border-success/30",
-  warning: "bg-warning/10 text-warning border-warning/30",
-  danger: "bg-danger/10 text-danger border-danger/30",
-  info: "bg-info/10 text-info border-info/30",
-};
-
-const STATUS_TONE: Record<RunStatus, Tone> = {
-  running: "success",
-  paused: "warning",
-  completed: "info",
-  terminated: "danger",
-};
-
 export function Badge({
   className,
-  tone = "default",
-  children,
+  variant = "default",
   ...props
-}: HTMLAttributes<HTMLSpanElement> & { tone?: Tone }) {
+}: HTMLAttributes<HTMLSpanElement> & {
+  variant?: "default" | "active" | "complete" | "paused" | "terminated";
+}) {
+  const variants = {
+    default: "border-[#1c1c24] bg-[#141418] text-text-muted",
+    active: "border-blue-500/20 bg-blue-500/10 text-blue-400",
+    complete: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
+    paused: "border-amber-500/20 bg-amber-500/10 text-amber-400",
+    terminated: "border-rose-500/20 bg-rose-500/10 text-rose-400",
+  };
+
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-        TONES[tone],
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium tracking-normal transition-colors",
+        variants[variant],
         className,
       )}
       {...props}
-    >
-      {children}
-    </span>
+    />
   );
 }
 
-export function StatusBadge({ status }: { status: RunStatus }) {
-  const tone = STATUS_TONE[status];
-  const dot =
-    status === "running"
-      ? "bg-success"
-      : status === "paused"
-        ? "bg-warning"
-        : status === "terminated"
-          ? "bg-danger"
-          : "bg-info";
-  return (
-    <Badge tone={tone}>
-      <span className={cn("h-1.5 w-1.5 rounded-full", dot)} />
-      <span className="capitalize">{status}</span>
-    </Badge>
-  );
+export function StatusBadge({ status }: { status: RunStatus | string }) {
+  switch (status) {
+    case "running":
+      return (
+        <Badge variant="active">
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+          Active
+        </Badge>
+      );
+    case "paused":
+      return (
+        <Badge variant="paused">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          Paused
+        </Badge>
+      );
+    case "completed":
+      return (
+        <Badge variant="complete">
+          <span>✓</span>
+          Complete
+        </Badge>
+      );
+    case "terminated":
+      return (
+        <Badge variant="terminated">
+          <span>×</span>
+          Terminated
+        </Badge>
+      );
+    default:
+      return <Badge>{status}</Badge>;
+  }
 }

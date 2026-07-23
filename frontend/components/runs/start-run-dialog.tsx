@@ -47,7 +47,7 @@ export function StartRunDialog({
       <div className="relative w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-text">Start New Run</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>

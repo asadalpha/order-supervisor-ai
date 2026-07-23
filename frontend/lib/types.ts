@@ -1,5 +1,16 @@
 export type RunStatus = "running" | "paused" | "completed" | "terminated";
 
+export const AVAILABLE_TOOLS = [
+  "message_fulfillment_team",
+  "message_payments_team",
+  "message_logistics_team",
+  "message_customer",
+  "create_internal_note",
+  "schedule_wake_up",
+  "escalate_issue",
+  "close_workflow",
+] as const;
+
 export interface Supervisor {
   id: string;
   name: string;
@@ -33,7 +44,10 @@ export interface WorkflowRun {
   created_at: string;
   completed_at?: string | null;
   final_output?: Record<string, unknown> | null;
+  supervisor?: Supervisor;
 }
+
+export type Run = WorkflowRun;
 
 export interface TimelineEvent {
   id: string;
@@ -63,15 +77,10 @@ export interface AgentAction {
 
 export interface MemoryResponse {
   run_id: string;
-  compact_summary: string | null;
+  compact_summary?: string | null;
   recent_events: TimelineEvent[];
   sleep_state: string;
-  next_wake_up: string | null;
-}
-
-export interface EventCreateInput {
-  event_type: string;
-  event_data?: Record<string, unknown>;
+  next_wake_up?: string | null;
 }
 
 export interface RunCreateInput {
@@ -79,27 +88,11 @@ export interface RunCreateInput {
   order_id: string;
 }
 
-export const EVENT_TYPES = [
-  "order_created",
-  "payment_confirmed",
-  "payment_failed",
-  "shipment_created",
-  "shipment_delayed",
-  "delivered",
-  "refund_requested",
-  "customer_message_received",
-  "no_update_for_n_hours",
-] as const;
+export interface EventCreateInput {
+  event_type: string;
+  event_data: Record<string, unknown>;
+}
 
-export type EventType = (typeof EVENT_TYPES)[number];
-
-export const AVAILABLE_TOOLS = [
-  "send_customer_message",
-  "create_internal_note",
-  "escalate_issue",
-  "mark_for_review",
-  "schedule_wake_up",
-  "close_workflow",
-] as const;
-
-export type AvailableTool = (typeof AVAILABLE_TOOLS)[number];
+export interface InstructionCreateInput {
+  instruction: string;
+}
