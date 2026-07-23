@@ -36,7 +36,7 @@ A production-ready POC for a long-running **AI Order Supervisor** that monitors 
 
 1. Clone the repository and copy the environment variables:
    ```bash
-   cp backend/.env.example .env
+   cp backend/.env.example backend/.env
    ```
 2. Start all services using Docker Compose:
    ```bash
