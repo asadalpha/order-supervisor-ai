@@ -76,17 +76,7 @@ pnpm dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
 
-## Automated Backend Unit Tests
-
-Run the comprehensive 20-endpoint test suite:
-```bash
-cd backend
-uv run pytest
-```
-
----
 
 ## Project Documentation Artifacts
 
