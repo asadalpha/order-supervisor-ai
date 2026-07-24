@@ -78,7 +78,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 
 
-## Project Documentation Artifacts
 
-- **[System Architecture & Video Script](system_architecture_and_demo_script.md)**: System design diagrams (Mermaid sequence & flowcharts) and video demo walkthrough guide.
-- **[Implementation Plan](implementation_plan.md)**: Detailed feature implementation roadmap.
